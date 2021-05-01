@@ -47,6 +47,65 @@ static inline bool IsRed(Node* node)
 	return (node != NULL) && node->color;
 }
 
+static Node* MoveRedLeft(Node* node) 
+{
+	ColorFlip(node);
+
+	if (node->rightNode != NULL && IsRed(node->rightNode->leftNode))
+	{
+		node->rightNode = RotateRight(node->rightNode);
+		node = RotateLeft(node);
+		ColorFlip(node);
+	}
+
+	return node;
+}
+
+static Node* MoveRedRight(Node* node)
+{
+	ColorFlip(node);
+	
+	if (node->leftNode != NULL && IsRed(node->leftNode->leftNode))
+	{
+		node = RotateRight(node);
+		ColorFlip(node);
+	}
+
+	return node;
+}
+
+// find minimum from specified node
+static Node* FindMin(Node* node)
+{
+	while (node->leftNode != NULL) 
+	{
+		node = node->leftNode;
+	}
+
+	return node;
+}
+
+// repair rule violations
+static Node* FixUp(Node* node)
+{
+	if (IsRed(node->rightNode))
+	{
+		node = RotateLeft(node);
+	}
+
+	if (IsRed(node->leftNode) && IsRed(node->leftNode->leftNode))
+	{
+		node = RotateRight(node);
+	}
+
+	if (IsRed(node->leftNode) && IsRed(node->rightNode))
+	{
+		ColorFlip(node);
+	}
+
+	return node;
+}
+
 // constructor
 LeftLeaningBlackTree::LeftLeaningBlackTree() 
 {
@@ -143,5 +202,106 @@ void LeftLeaningBlackTree::Free(Node* node)
 
 		delete node;
 		node = NULL;
+	}
+}
+
+// find a tree minimum
+KeyValue LeftLeaningBlackTree::GetMin()
+{
+	Node* node = this->root;
+	while (node->leftNode != NULL)
+	{
+		node = node->leftNode;
+	}
+
+	return node->KeyValue;
+}
+
+// delete a minimum
+void LeftLeaningBlackTree::DeleteMin()
+{
+	this->root = DeleteMin(this->root);
+	this->root->color = BLACK;
+}
+
+Node* LeftLeaningBlackTree::DeleteMin(Node* node)
+{
+	if (node->leftNode == NULL)
+	{
+		Free(node);
+		return NULL;
+	}
+
+	if (!IsRed(node->leftNode) && !IsRed(node->leftNode->leftNode))
+	{
+		node = MoveRedLeft(node);
+	}
+
+	node->leftNode = DeleteMin(node->leftNode);
+
+	return FixUp(node);
+}
+
+// recursive deletion
+Node* LeftLeaningBlackTree::DeleteRec(Node* node, unsigned int key)
+{
+	if (node->KeyValue.Key > key)
+	{
+		if (node->leftNode != NULL)
+		{
+			if (!IsRed(node->leftNode) && !IsRed(node->leftNode->leftNode))
+			{
+				node = MoveRedLeft(node);
+			}
+			
+			node->leftNode = DeleteRec(node->leftNode, key);
+		}
+	}
+	else 
+	{
+		if (IsRed(node->leftNode))
+		{
+			node = RotateRight(node);
+		}
+
+		if (node->KeyValue.Key == key && node->rightNode == NULL)
+		{
+			Free(node);
+			return NULL;
+		}
+
+		if (node->rightNode != NULL)
+		{
+			if (!IsRed(node->rightNode) && !IsRed(node->rightNode->leftNode))
+			{
+				node = MoveRedRight(node);
+			}
+
+			if (node->KeyValue.Key == key)
+			{
+				node->KeyValue = FindMin(node->rightNode)->KeyValue;
+				node->rightNode = DeleteMin(node->rightNode);
+			}
+			else
+			{
+				node->rightNode = DeleteRec(node->rightNode, key);
+			}
+		}
+	}
+
+	return FixUp(node);
+}
+
+// delete the node with the specified key
+void LeftLeaningBlackTree::Delete(unsigned int key)
+{
+	if (this->root != NULL)
+	{
+		this->root = DeleteRec(this->root, key);
+
+		if (this->root != NULL)
+		{
+			this->root->color = BLACK;
+		}
 	}
 }
