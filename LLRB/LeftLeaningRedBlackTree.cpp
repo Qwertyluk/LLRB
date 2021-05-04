@@ -1,10 +1,11 @@
-#include "LeftLeaningRedBlackTree.h"
 #include <cstddef>
 
+#include "LeftLeaningRedBlackTree.h"
 
 
 // left rotation
-static Node* RotateLeft(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::RotateLeft(Node* node)
 {
 	Node* temp = node->rightNode;
 	node->rightNode = temp->leftNode;
@@ -16,7 +17,8 @@ static Node* RotateLeft(Node* node)
 }
 
 // right rotation
-static Node* RotateRight(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::RotateRight(Node* node)
 {
 	Node* temp = node->leftNode;
 	node->leftNode = temp->rightNode;
@@ -28,7 +30,8 @@ static Node* RotateRight(Node* node)
 }
 
 // color flip
-static void ColorFlip(Node* node)
+template<class Key, class T>
+void LeftLeaningBlackTree<Key, T>::ColorFlip(Node* node)
 {
 	node->color = !node->color;
 
@@ -42,12 +45,14 @@ static void ColorFlip(Node* node)
 }
 
 // check if a node is red
-static inline bool IsRed(Node* node)
+template<class Key, class T>
+inline bool LeftLeaningBlackTree<Key, T>::IsRed(Node* node)
 {
 	return (node != NULL) && node->color;
 }
 
-static Node* MoveRedLeft(Node* node) 
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::MoveRedLeft(Node* node)
 {
 	ColorFlip(node);
 
@@ -61,7 +66,8 @@ static Node* MoveRedLeft(Node* node)
 	return node;
 }
 
-static Node* MoveRedRight(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::MoveRedRight(Node* node)
 {
 	ColorFlip(node);
 	
@@ -75,7 +81,8 @@ static Node* MoveRedRight(Node* node)
 }
 
 // find minimum from specified node
-static Node* FindMin(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::FindMin(Node* node)
 {
 	while (node->leftNode != NULL) 
 	{
@@ -86,7 +93,8 @@ static Node* FindMin(Node* node)
 }
 
 // repair rule violations
-static Node* FixUp(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key,T>::FixUp(Node* node)
 {
 	if (IsRed(node->rightNode))
 	{
@@ -107,19 +115,22 @@ static Node* FixUp(Node* node)
 }
 
 // constructor
-LeftLeaningBlackTree::LeftLeaningBlackTree() 
+template<class Key, class T>
+LeftLeaningBlackTree<Key, T>::LeftLeaningBlackTree<Key, T>() 
 {
 	this->root = NULL;
 }
 
 // destructor
-LeftLeaningBlackTree::~LeftLeaningBlackTree() 
+template<class Key, class T>
+LeftLeaningBlackTree<Key, T>::~LeftLeaningBlackTree<Key, T>() 
 {
 	this->Free(this->root);
 }
 
 // creation of a new node
-Node* LeftLeaningBlackTree::NewNode(KeyValue keyValue)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::NewNode(KeyValue<Key, T> keyValue)
 {
 	Node* newNode = new Node;
 	newNode->KeyValue.Key = keyValue.Key;
@@ -132,37 +143,47 @@ Node* LeftLeaningBlackTree::NewNode(KeyValue keyValue)
 }
 
 // insertion of a new node
-void LeftLeaningBlackTree::Insert(KeyValue keyvalue)
+template<class Key, class T>
+bool LeftLeaningBlackTree<Key, T>::Insert(KeyValue<Key, T> keyvalue)
 {
-	this->root = this->InsertRec(this->root, keyvalue);
+	std::pair<Node*, bool> pair = this->InsertRec(this->root, keyvalue);
+	this->root = pair.first;
 	this->root->color = BLACK;
+
+	return pair.second;
 }
 
 // recursive insertion
-Node* LeftLeaningBlackTree::InsertRec(Node* node, KeyValue keyValue)
+template<class Key, class T>
+std::pair<typename LeftLeaningBlackTree<Key, T>::Node*, bool> LeftLeaningBlackTree<Key, T>::InsertRec(Node* node, KeyValue<Key, T> keyValue)
 {
 	// insert a leaf
 	if (node == NULL)
 	{
 		node = this->NewNode(keyValue);
-		return node;
+		return std::make_pair(node, true);
 	}
 
+	bool succeed = true;
 	// check if value is already in the tree
-	if (keyValue.Key == node->KeyValue.Key) 
+	if (keyValue.Key == node->KeyValue.Key)
 	{
-		node->KeyValue.Value = keyValue.Value;
+		succeed = false;
 	}
 	// recurse left or right
-	else 
+	else
 	{
 		if (keyValue.Key < node->KeyValue.Key)
 		{
-			node->leftNode = InsertRec(node->leftNode, keyValue);
+			std::pair<Node*, bool> pair = InsertRec(node->leftNode, keyValue);
+			node->leftNode = pair.first;
+			succeed = pair.second;
 		}
 		else
 		{
-			node->rightNode = InsertRec(node->rightNode, keyValue);
+			std::pair<Node*, bool> pair = InsertRec(node->rightNode, keyValue);
+			node->rightNode = pair.first;
+			succeed = pair.second;
 		}
 	}
 
@@ -183,11 +204,12 @@ Node* LeftLeaningBlackTree::InsertRec(Node* node, KeyValue keyValue)
 		ColorFlip(node);
 	}
 
-	return node;
+	return std::make_pair(node, succeed);
 }
 
-// free node
-void LeftLeaningBlackTree::Free(Node* node)
+// free a node
+template<class Key, class T>
+void LeftLeaningBlackTree<Key, T>::Free(Node* node)
 {
 	if (node != NULL) {
 		if (node->leftNode != NULL)
@@ -206,7 +228,8 @@ void LeftLeaningBlackTree::Free(Node* node)
 }
 
 // find a tree minimum
-KeyValue LeftLeaningBlackTree::GetMin()
+template<class Key, class T>
+KeyValue<Key, T> LeftLeaningBlackTree<Key, T>::GetMin()
 {
 	Node* node = this->root;
 	while (node->leftNode != NULL)
@@ -217,14 +240,56 @@ KeyValue LeftLeaningBlackTree::GetMin()
 	return node->KeyValue;
 }
 
+// find a tree minimum
+template<class Key, class T>
+KeyValue<Key, T>* LeftLeaningBlackTree<Key, T>::Find(Key key)
+{
+	Node* node = FindRec(this->root, key);
+	if (node == NULL)
+	{
+		return NULL;
+	}
+	else
+	{
+		KeyValue<Key, T>* kv = new KeyValue<Key, T>();
+		kv = &node->KeyValue;
+		return kv;
+	}
+}
+
+// find a tree minimum
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::FindRec(Node* node, Key key)
+{
+	if (node == NULL)
+	{
+		return NULL;
+	}
+
+	if (node->KeyValue.Key == key)
+	{
+		return node;
+	}
+	else if(node->KeyValue.Key < key)
+	{
+		return FindRec(node->rightNode, key);
+	}
+	else
+	{
+		return FindRec(node->leftNode, key);
+	}
+}
+
 // delete a minimum
-void LeftLeaningBlackTree::DeleteMin()
+template<class Key, class T>
+void LeftLeaningBlackTree<Key, T>::DeleteMin()
 {
 	this->root = DeleteMin(this->root);
 	this->root->color = BLACK;
 }
 
-Node* LeftLeaningBlackTree::DeleteMin(Node* node)
+template<class Key, class T>
+typename LeftLeaningBlackTree<Key, T>::Node* LeftLeaningBlackTree<Key, T>::DeleteMin(Node* node)
 {
 	if (node->leftNode == NULL)
 	{
@@ -243,8 +308,13 @@ Node* LeftLeaningBlackTree::DeleteMin(Node* node)
 }
 
 // recursive deletion
-Node* LeftLeaningBlackTree::DeleteRec(Node* node, unsigned int key)
+template<class Key, class T>
+std::pair<typename LeftLeaningBlackTree<Key, T>::Node*, bool> LeftLeaningBlackTree<Key, T>::DeleteRec(Node* node, Key key)
 {
+	std::pair<Node*, bool> retPair;
+	retPair.first = node;
+	retPair.second = false;
+
 	if (node->KeyValue.Key > key)
 	{
 		if (node->leftNode != NULL)
@@ -254,7 +324,9 @@ Node* LeftLeaningBlackTree::DeleteRec(Node* node, unsigned int key)
 				node = MoveRedLeft(node);
 			}
 			
-			node->leftNode = DeleteRec(node->leftNode, key);
+			std::pair<Node*, bool> pair = DeleteRec(node->leftNode, key);
+			node->leftNode = pair.first;
+			retPair.second = pair.second;
 		}
 	}
 	else 
@@ -267,7 +339,7 @@ Node* LeftLeaningBlackTree::DeleteRec(Node* node, unsigned int key)
 		if (node->KeyValue.Key == key && node->rightNode == NULL)
 		{
 			Free(node);
-			return NULL;
+			return std::make_pair(nullptr, true);
 		}
 
 		if (node->rightNode != NULL)
@@ -284,24 +356,41 @@ Node* LeftLeaningBlackTree::DeleteRec(Node* node, unsigned int key)
 			}
 			else
 			{
-				node->rightNode = DeleteRec(node->rightNode, key);
+				std::pair<Node*, bool> pair = DeleteRec(node->rightNode, key);
+				node->rightNode = pair.first;
+				retPair.second = pair.second;
 			}
 		}
 	}
 
-	return FixUp(node);
+	Node* retNode = FixUp(node);
+	retPair.first = retNode;
+	return retPair;
 }
 
 // delete the node with the specified key
-void LeftLeaningBlackTree::Delete(unsigned int key)
+template<class Key, class T>
+bool LeftLeaningBlackTree<Key, T>::Delete(Key key)
 {
 	if (this->root != NULL)
 	{
-		this->root = DeleteRec(this->root, key);
+		std::pair<Node*, bool> pair = DeleteRec(this->root, key);
+		this->root = pair.first;
 
 		if (this->root != NULL)
 		{
 			this->root->color = BLACK;
 		}
+
+		return pair.second;
 	}
+
+	return false;
+}
+
+template<class Key, class T>
+void LeftLeaningBlackTree<Key, T>::Clear()
+{
+	this->Free(this->root);
+	this->root = NULL;
 }

@@ -1,7 +1,8 @@
 #pragma once
 
+template<class Key, class T>
 struct KeyValue 
 {
-	unsigned int Key;
-	double Value;
+	Key Key;
+	T Value;
 };
