@@ -1,56 +1,65 @@
 #include <iostream>
+#include <fstream>
 #include <map>
+#include <chrono>
+#include <string>
 
 #include "llbr_map.h"
-#include "llbr_map.cpp"
-
 #include "LeftLeaningRedBlackTree.h"
-//#include "LeftLeaningRedBlackTree.cpp"
 
 using namespace std;
 
 int main()
 {
-	LLRB_Map<std::string, int> LLRB_map;
-	
-	cout << "size 0: " << LLRB_map.size() << endl;
-	cout << "empty true: " << LLRB_map.empty() << endl;
+	LLRB_Map<string, string> myMap;
+	map<string, string> cppMap;
 
-	// true
-	bool b1 = LLRB_map.insert(make_pair("ala", 5));
-	// true
-	bool b2 = LLRB_map.insert(make_pair("ala2", 6));
-	// false
-	bool b3 = LLRB_map.insert(make_pair("ala2", 3));
-	// false
-	bool b4 = LLRB_map.insert(make_pair("ala", 10));
-	// true
-	bool b5 = LLRB_map.insert(make_pair("ala3", 3));
-	// false
-	bool b6 = LLRB_map.insert(make_pair("ala3", 0));
+	ifstream dicFile("english.dic");
 
-	// 5
-	int& value1 = LLRB_map.at("ala");
-	// 6
-	int& value2 = LLRB_map.at("ala2");
-	// 3
-	int& value3 = LLRB_map.at("ala3");
-	// 3
-	const int& value4 = LLRB_map.at("ala3");
+	string tempStr;
+	int i = 0;
+	int baseTime = 5000;
+	int j = baseTime;
+	while (getline(dicFile, tempStr))
+	{
+		i++;
+		if (i % j == 0 )
+		{
+			j = j + baseTime;
+			cout << cppMap.size() << endl;
+			cout << myMap.size() << endl;
 
-	// true
-	bool b7 = LLRB_map.erase("ala");
-	// false
-	bool b8 = LLRB_map.erase("ala");
-	// true
-	bool b9 = LLRB_map.erase("ala3");
+			chrono::steady_clock::time_point cppMapBegin = chrono::steady_clock::now();
+			cppMap.insert(make_pair(tempStr, tempStr)); 
+			std::chrono::steady_clock::time_point cppMapEnd = std::chrono::steady_clock::now();
+			cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(cppMapEnd - cppMapBegin).count() << endl;
 
-	// 1
-	size_t size1 = LLRB_map.count("ala2");
-	
-	LLRB_map.insert(make_pair("ala3", 3));
-	LLRB_map.clear();
-		
-	// 0
-	size_t size2 = LLRB_map.count("ala2");
+			chrono::steady_clock::time_point myMapBegin = chrono::steady_clock::now();
+			myMap.insert(make_pair(tempStr, tempStr));
+			std::chrono::steady_clock::time_point myMapEnd = std::chrono::steady_clock::now();
+			cout << "myMap time: " << chrono::duration_cast<chrono::microseconds>(myMapEnd - myMapBegin).count() << endl;
+		}
+		else 
+		{
+			cppMap.insert(make_pair(tempStr, tempStr));
+			myMap.insert(make_pair(tempStr, tempStr));
+		}
+	}
+
+	cout << endl << endl << endl;
+
+	chrono::steady_clock::time_point cppMapBeginAt = chrono::steady_clock::now();
+	cppMap.at("juiciest");
+	std::chrono::steady_clock::time_point cppMapEndAt = std::chrono::steady_clock::now();
+	cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(cppMapEndAt - cppMapBeginAt).count() << endl;
+
+	chrono::steady_clock::time_point myMapBeginAt = chrono::steady_clock::now();
+	myMap.at("juiciest");
+	std::chrono::steady_clock::time_point myMapEndAt = std::chrono::steady_clock::now();
+	cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(myMapEndAt - myMapBeginAt).count() << endl;
+
+	for (auto& v : myMap)
+	{
+		cout << v.getKeyValue().Value << endl;
+	}
 }

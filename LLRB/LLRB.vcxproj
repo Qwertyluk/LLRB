@@ -139,14 +139,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="LeftLeaningRedBlackTree.cpp" />
-    <ClCompile Include="llbr_map.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Colors.h" />
+    <ClInclude Include="ConstantIterator.h" />
+    <ClInclude Include="Iterator.h" />
     <ClInclude Include="KeyValuePair.h" />
     <ClInclude Include="LeftLeaningRedBlackTree.h" />
     <ClInclude Include="llbr_map.h" />
+    <ClInclude Include="Node.h" />
+    <ClInclude Include="TreeTraversal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
