@@ -122,7 +122,7 @@ private:
 			node = NULL;
 		}
 	}
-	std::pair<Node<Key, T>*, bool> DeleteRec(Node<Key, T>* node, Key key)
+	std::pair<Node<Key, T>*, bool> DeleteRec(Node<Key, T>* node, const Key& key)
 	{
 		std::pair<Node<Key, T>*, bool> retPair;
 		retPair.first = node;
@@ -305,6 +305,37 @@ private:
 			return FindRec(node->getLeftNode(), key);
 		}
 	}
+	Node<Key, T>* FindLowerBoundRec(Node<Key, T>* node, const Key& key)
+	{
+		// should go to the left
+		if (this->compare(key, node->getKeyValue().Key))
+		{
+			if (node->getLeftNode() != NULL)
+			{
+				return FindLowerBoundRec(node->getLeftNode(), key);
+			}
+			else 
+			{
+				return node;
+			}
+		}
+		else // should go to the right
+		{
+			// right node exists
+			if (node->getRightNode() != NULL)
+			{
+				return FindLowerBoundRec(node->getRightNode(), key);
+			}
+			else // right node doesn't exists - go back as long as parent will not be the left child
+			{
+				while (node == node->getParentNode()->getRightNode())
+				{
+					node = node->getParentNode();
+				}
+				return node->getParentNode();
+			}
+		}
+	}
 
 public:
 	LeftLeaningBlackTree()
@@ -341,18 +372,16 @@ public:
 
 		return node;
 	}
-	KeyValue<Key, T>* Find(Key key)
+	Node<Key, T>* Find(const Key& key)
 	{
 		Node<Key, T>* node = FindRec(this->root, key);
 		if (node == NULL)
 		{
-			return NULL;
+			return &this->iteratorRoot;
 		}
 		else
 		{
-			KeyValue<Key, T>* kv = new KeyValue<Key, T>();
-			kv = &node->getKeyValue();
-			return kv;
+			return node;
 		}
 	}
 	void DeleteMin()
@@ -363,7 +392,7 @@ public:
 			this->root->color = BLACK;
 		}
 	}
-	bool Delete(Key key)
+	bool Delete(const Key& key)
 	{
 		if (this->root != NULL)
 		{
@@ -388,5 +417,18 @@ public:
 	Node<Key, T>* GetIteratorRoot()
 	{
 		return &this->iteratorRoot;
+	}
+	Compare GetCompareObject() const 
+	{
+		return this->compare;
+	}
+	Node<Key, T>* FindLowerBound(const Key& key)
+	{
+		if (this->root == NULL)
+		{
+			return &this->iteratorRoot;
+		}
+
+		return FindLowerBoundRec(this->root, key);
 	}
 };

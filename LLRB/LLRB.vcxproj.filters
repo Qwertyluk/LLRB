@@ -44,5 +44,11 @@
     <ClInclude Include="TreeTraversal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ReverseIterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReverseConstantIterator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

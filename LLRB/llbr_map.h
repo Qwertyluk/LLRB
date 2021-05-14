@@ -8,6 +8,8 @@
 #include "LeftLeaningRedBlackTree.h"
 #include "Iterator.h"
 #include "ConstantIterator.h"
+#include "ReverseIterator.h"
+#include "ReverseConstantIterator.h"
 
 template<typename Key, typename T, typename Compare = std::less<Key>, typename Alloc = std::allocator<Node<Key, T>>>
 class LLRB_Map
@@ -15,6 +17,15 @@ class LLRB_Map
 	private:
 		LeftLeaningBlackTree<Key, T, Compare, Alloc> LLRB;
 		size_t length;
+		T& GetValue(const Key& k)
+		{
+			Node<Key, T>* node = this->LLRB.Find(k); 
+			if (node == this->LLRB.GetIteratorRoot())
+			{
+				throw std::out_of_range("llbr_map");
+			}
+			return node->getKeyValue().Value;
+		}
 
 	public:
 		LLRB_Map()
@@ -27,25 +38,21 @@ class LLRB_Map
 
 		}
 
+
 		// element access
 		T& at(const Key& k)
 		{
-			KeyValue<Key, T>* kv = this->LLRB.Find(k);
-			if (kv == NULL)
-			{
-				throw std::out_of_range("llbr_map");
-			}
-			return kv->Value;
+			return GetValue(k);
 		}
 
 		const T& at(const Key& k) const
 		{
-			KeyValue<Key, T>* kv = this->LLRB.Find(k);
-			if (kv == NULL)
-			{
-				throw std::out_of_range("llbr_map");
-			}
-			return kv->Value;
+			return GetValue(k);
+		}
+
+		T& operator[] (const Key& k)
+		{
+			return GetValue(k);
 		}
 
 		
@@ -69,6 +76,27 @@ class LLRB_Map
 		{
 			return Iterator<Key, T>(this->LLRB.GetIteratorRoot());
 		}
+
+		ReverseIterator<Key, T> rbegin()
+		{
+			return ReverseIterator<Key, T>(this->LLRB.GetMin());
+		}
+
+		ReverseIterator<Key, T> rend()
+		{
+			return ReverseIterator<Key, T>(this->LLRB.GetIteratorRoot());
+		}
+
+		ReverseConstantIterator<Key, T> crbegin() const
+		{
+			return ReverseConstantIterator<Key, T>(this->LLRB.GetMin());
+		}
+
+		ReverseConstantIterator<Key, T> crend() const
+		{
+			return Iterator<Key, T>(this->LLRB.GetIteratorRoot());
+		}
+
 
 		// capacity
 		bool empty() const
@@ -118,6 +146,13 @@ class LLRB_Map
 		}
 
 		
+		// observers
+		Compare key_compare() const
+		{
+			return this->LLRB.GetCompareObject();
+		}
+
+
 		// look up
 		size_t count(const Key& k)
 		{
@@ -127,5 +162,15 @@ class LLRB_Map
 			}
 
 			return 0;
+		}
+
+		Iterator<Key, T> find(const Key& k)
+		{
+			return Iterator<Key, T>(this->LLRB.Find(k));
+		}
+
+		Iterator<Key, T> lower_bound(const Key& k)
+		{
+			return Iterator<Key, T>(this->LLRB.FindLowerBound(k));
 		}
 };

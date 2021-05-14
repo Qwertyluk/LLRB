@@ -149,6 +149,8 @@
     <ClInclude Include="LeftLeaningRedBlackTree.h" />
     <ClInclude Include="llbr_map.h" />
     <ClInclude Include="Node.h" />
+    <ClInclude Include="ReverseConstantIterator.h" />
+    <ClInclude Include="ReverseIterator.h" />
     <ClInclude Include="TreeTraversal.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
