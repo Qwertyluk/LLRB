@@ -111,15 +111,15 @@ class LLRB_Map
 
 		
 		// modifiers
-		bool insert(const std::pair<const Key, T>& val)
+		std::pair<Iterator<Key, T>, bool> insert(const std::pair<const Key, T>& val)
 		{
 			KeyValue<Key, T> kv;
 			kv.Key = val.first;
 			kv.Value = val.second;
 
-			bool ret = this->LLRB.Insert(kv);
+			std::pair<Iterator<Key, T>, bool> ret = this->LLRB.Insert(kv);
 
-			if (ret)
+			if (ret.second)
 			{
 				this->length++;
 			}
@@ -156,7 +156,7 @@ class LLRB_Map
 		// look up
 		size_t count(const Key& k)
 		{
-			if (this->LLRB.Find(k) != NULL)
+			if (this->LLRB.Find(k) != this->LLRB.GetIteratorRoot())
 			{
 				return 1;
 			}
@@ -167,6 +167,11 @@ class LLRB_Map
 		Iterator<Key, T> find(const Key& k)
 		{
 			return Iterator<Key, T>(this->LLRB.Find(k));
+		}
+
+		Iterator<Key, T> upper_bound(const Key& k)
+		{
+			return Iterator<Key, T>(this->LLRB.FindUpperBound(k));
 		}
 
 		Iterator<Key, T> lower_bound(const Key& k)

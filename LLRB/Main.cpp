@@ -3,63 +3,105 @@
 #include <map>
 #include <chrono>
 #include <string>
+#include <algorithm>
 
 #include "llbr_map.h"
 #include "LeftLeaningRedBlackTree.h"
+#include "Node.h"
+#include "Iterator.h"
 
 using namespace std;
 
 int main()
 {
-	LLRB_Map<string, string> myMap;
-	map<string, string> cppMap;
+	LLRB_Map<int, int> testMap;
+	testMap.insert(make_pair(25, 25));
+	testMap.insert(make_pair(50, 50));
+	testMap.insert(make_pair(15, 15));
+	testMap.insert(make_pair(22, 22));
+
+	LLRB_Map<int, string> implMap;
+	map<int, string> cppMap;
 
 	ifstream dicFile("english.dic");
 
 	string tempStr;
-	int i = 0;
-	int baseTime = 5000;
-	int j = baseTime;
+	ofstream fileImplMapInsert;
+	ofstream fileCppMapInsert;
+	ofstream fileImplMapAt;
+	ofstream fileCppMapAt;
+	ofstream fileImplMapErase;
+	ofstream fileCppMapErase;
+	fileImplMapInsert.open("implMapInsert.csv");
+	fileCppMapInsert.open("cppMapInsert.csv");
+	fileImplMapAt.open("implMapAt.csv");
+	fileCppMapAt.open("cppMapAt.csv");
+	fileImplMapErase.open("implMapErase.csv");
+	fileCppMapErase.open("cppMapErase.csv");
+
+	int nLines = 0;
 	while (getline(dicFile, tempStr))
 	{
-		i++;
-		if (i % j == 0 )
-		{
-			j = j + baseTime;
-			cout << cppMap.size() << endl;
-			cout << myMap.size() << endl;
-
-			chrono::steady_clock::time_point cppMapBegin = chrono::steady_clock::now();
-			cppMap.insert(make_pair(tempStr, tempStr)); 
-			std::chrono::steady_clock::time_point cppMapEnd = std::chrono::steady_clock::now();
-			cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(cppMapEnd - cppMapBegin).count() << endl;
-
-			chrono::steady_clock::time_point myMapBegin = chrono::steady_clock::now();
-			myMap.insert(make_pair(tempStr, tempStr));
-			std::chrono::steady_clock::time_point myMapEnd = std::chrono::steady_clock::now();
-			cout << "myMap time: " << chrono::duration_cast<chrono::microseconds>(myMapEnd - myMapBegin).count() << endl;
-		}
-		else 
-		{
-			cppMap.insert(make_pair(tempStr, tempStr));
-			myMap.insert(make_pair(tempStr, tempStr));
-		}
+		nLines++;
 	}
+	dicFile.clear();
+	dicFile.seekg(0);
 
-	cout << endl << endl << endl;
-
-	chrono::steady_clock::time_point cppMapBeginAt = chrono::steady_clock::now();
-	cppMap.at("juiciest");
-	std::chrono::steady_clock::time_point cppMapEndAt = std::chrono::steady_clock::now();
-	cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(cppMapEndAt - cppMapBeginAt).count() << endl;
-
-	chrono::steady_clock::time_point myMapBeginAt = chrono::steady_clock::now();
-	myMap.at("juiciest");
-	std::chrono::steady_clock::time_point myMapEndAt = std::chrono::steady_clock::now();
-	cout << "cppMap time: " << chrono::duration_cast<chrono::microseconds>(myMapEndAt - myMapBeginAt).count() << endl;
-
-	for (auto& v : myMap)
+	int* integers = new int[nLines];
+	for (int i = 0; i < nLines; i++)
 	{
-		cout << v.getKeyValue().Value << endl;
+		integers[i] = i + 1;
 	}
+	random_shuffle(&integers[0], &integers[nLines]);
+
+	for(int i = 1 ; i <= nLines; i++)
+	{
+		getline(dicFile, tempStr);
+		chrono::steady_clock::time_point cppMapInsertBegin = chrono::steady_clock::now();
+		cppMap.insert(make_pair(integers[i - 1], tempStr));
+		std::chrono::steady_clock::time_point cppMapInsertEnd = std::chrono::steady_clock::now();
+		fileCppMapInsert << chrono::duration_cast<chrono::nanoseconds>(cppMapInsertEnd - cppMapInsertBegin).count() << endl;
+
+		chrono::steady_clock::time_point implMapInsertBegin = chrono::steady_clock::now();
+		implMap.insert(make_pair(integers[i - 1], tempStr));
+		std::chrono::steady_clock::time_point implMapInsertEnd = std::chrono::steady_clock::now();
+		fileImplMapInsert << chrono::duration_cast<chrono::nanoseconds>(implMapInsertEnd - implMapInsertBegin).count() << endl;
+		
+		int rnd = rand() % i + 1;
+
+		chrono::steady_clock::time_point cppMapAtBegin = chrono::steady_clock::now();
+		cppMap.at(integers[rnd - 1]);
+		std::chrono::steady_clock::time_point cppMapAtEnd = std::chrono::steady_clock::now();
+		fileCppMapAt << chrono::duration_cast<chrono::nanoseconds>(cppMapAtEnd - cppMapAtBegin).count() << endl;
+
+		chrono::steady_clock::time_point implMapAtBegin = chrono::steady_clock::now();
+		implMap.at(integers[rnd - 1]);
+		std::chrono::steady_clock::time_point implMapAtEnd = std::chrono::steady_clock::now();
+		fileImplMapAt << chrono::duration_cast<chrono::nanoseconds>(implMapAtEnd - implMapAtBegin).count() << endl;
+	}
+
+	int* indexes = new int[cppMap.size()];
+	for (int i = 0; i < cppMap.size(); i++) {
+		indexes[i] = i + 1;
+	}
+	random_shuffle(&indexes[0], &indexes[cppMap.size()]);
+
+	for (int i = cppMap.size() - 1; i >= 0; i--)
+	{
+		chrono::steady_clock::time_point cppMapEraseBegin = chrono::steady_clock::now();
+		size_t n1 = cppMap.erase(indexes[i]);
+		std::chrono::steady_clock::time_point cppMapEraseEnd = std::chrono::steady_clock::now();
+		fileCppMapErase << chrono::duration_cast<chrono::nanoseconds>(cppMapEraseEnd - cppMapEraseBegin).count() << endl;
+
+		chrono::steady_clock::time_point implMapEraseBegin = chrono::steady_clock::now();
+		size_t n2 = implMap.erase(indexes[i]);
+		std::chrono::steady_clock::time_point implMapEraseEnd = std::chrono::steady_clock::now();
+		fileImplMapErase << chrono::duration_cast<chrono::nanoseconds>(implMapEraseEnd - implMapEraseBegin).count() << endl;
+	}
+
+	delete[] indexes;
+	delete[] integers;
+
+	cout << cppMap.size() << endl;
+	cout << implMap.size() << endl;
 }

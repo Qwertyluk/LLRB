@@ -6,6 +6,7 @@
 #include "KeyValuePair.h"
 #include "Node.h"
 #include "Colors.h"
+#include "Iterator.h"
 
 template<class Key, class T, class Compare = std::less<Key>, class Alloc = std::allocator<Node<Key, T>>>
 class LeftLeaningBlackTree 
@@ -38,12 +39,20 @@ private:
 			if (this->compare(keyValue.Key, node->getKeyValue().Key))
 			{
 				std::pair<Node<Key, T>*, bool> pair = InsertRec(node->getLeftNode(), node, keyValue);
+				if (!pair.second)
+				{
+					return pair;
+				}
 				node->setLeftNode(pair.first);
 				succeed = pair.second;
 			}
 			else
 			{
 				std::pair<Node<Key, T>*, bool> pair = InsertRec(node->getRightNode(), node, keyValue);
+				if (!pair.second)
+				{
+					return pair;
+				}
 				node->setRightNode(pair.first);
 				succeed = pair.second;
 			}
@@ -166,6 +175,7 @@ private:
 				{
 					node->setKeyValue(FindMin(node->getRightNode())->getKeyValue());
 					node->setRightNode(DeleteMin(node->getRightNode()));
+					retPair.second = true;
 				}
 				else
 				{
@@ -305,8 +315,45 @@ private:
 			return FindRec(node->getLeftNode(), key);
 		}
 	}
+	Node<Key, T>* FindUpperBoundRec(Node<Key, T>* node, const Key& key)
+	{
+		// should go to the left
+		if (this->compare(key, node->getKeyValue().Key))
+		{
+			if (node->getLeftNode() != NULL)
+			{
+				return FindUpperBoundRec(node->getLeftNode(), key);
+			}
+			else 
+			{
+				return node;
+			}
+		}
+		else // should go to the right
+		{
+			// right node exists
+			if (node->getRightNode() != NULL)
+			{
+				return FindUpperBoundRec(node->getRightNode(), key);
+			}
+			else // right node doesn't exists - go back as long as parent will not be the left child
+			{
+				while (node == node->getParentNode()->getRightNode())
+				{
+					node = node->getParentNode();
+				}
+				return node->getParentNode();
+			}
+		}
+	}
 	Node<Key, T>* FindLowerBoundRec(Node<Key, T>* node, const Key& key)
 	{
+		// if key equals node's key
+		if (!this->compare(key, node->getKeyValue().Key) && !this->compare(node->getKeyValue().Key, key))
+		{
+			return node;
+		}
+
 		// should go to the left
 		if (this->compare(key, node->getKeyValue().Key))
 		{
@@ -348,14 +395,14 @@ public:
 		this->Free(this->root);
 	}
 
-	bool Insert(KeyValue<Key, T> keyValue)
+	std::pair<Iterator<Key, T>, bool> Insert(KeyValue<Key, T> keyValue)
 	{
 		std::pair<Node<Key, T>*, bool> pair = this->InsertRec(this->root, NULL, keyValue);
 		this->root = pair.first;
 		this->root->setColor(BLACK);
 		this->iteratorRoot.setLeftNode(this->root);
 
-		return pair.second;
+		return std::make_pair(Iterator<Key, T>(pair.first), pair.second);
 	}
 	Node<Key, T>* GetMin()
 	{
@@ -421,6 +468,15 @@ public:
 	Compare GetCompareObject() const 
 	{
 		return this->compare;
+	}
+	Node<Key, T>* FindUpperBound(const Key& key)
+	{
+		if (this->root == NULL)
+		{
+			return &this->iteratorRoot;
+		}
+
+		return FindUpperBoundRec(this->root, key);
 	}
 	Node<Key, T>* FindLowerBound(const Key& key)
 	{
